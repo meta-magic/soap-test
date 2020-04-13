@@ -1,0 +1,67 @@
+import { Component, OnInit } from '@angular/core';
+
+import { NgxSoapService, Client, ISoapMethodResponse } from 'ngx-soap';
+import { HttpClient } from '@angular/common/http';
+
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+
+  intA: number;
+  intB: number;
+  loading: boolean;
+  showDiagnostic: boolean;
+  message: string;
+  xmlResponse: string;
+  jsonResponse: string;
+  resultLabel: string;
+  client: Client;
+
+  constructor(private http: HttpClient, private soap: NgxSoapService) {
+    this.soap.createClient('https://uat-esb.fadv.net/ess/internal/global/SiebelFlashBoardPS?wsdl')
+      .then(client => {
+        console.log('Client', client);
+        this.client = client;
+      })
+      .catch(err => console.log('Error', err));
+
+  }
+
+  sum() {
+    this.loading = true;
+    const body = {
+      intA: this.intA,
+      intB: this.intB
+    };
+
+    this.client.call('Add', body).subscribe(res => {
+      this.xmlResponse = res.responseBody;
+      this.message = res.result.AddResult;
+      this.loading = false;
+    }, err => console.log(err));
+
+  }
+
+  subtract() {
+    this.loading = true;
+    const body = {
+      intA: this.intA,
+      intB: this.intB
+    };
+    (<any>this.client).Subtract(body).subscribe(
+      (res: ISoapMethodResponse) => {
+        console.log('method response', res);
+        this.xmlResponse = res.xml;
+        this.message = res.result.SubtractResult;
+        this.loading = false;
+      },
+      err => console.log(err)
+    );
+  }
+
+
+}
